@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="css/vue/trans.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="app">
+    캐릭터명: <input v-model="characterName"></br>
+    레벨: <input v-model="characterLv"></br>
+    상태: <input v-model="characterStatus"></br>
+    HP: <input v-model="characterHp"></br>
+    ATK: <input v-model="characterAtk"></br>
+    DEF: <input v-model="characterDef"></br>
+
+    <p>캐릭터명: {{ characterName }}&nbsp;&nbsp;&nbsp;
+        <!-- ???? -->
+        경험치: {{ curExp }} / {{ needExp }}</p>
+    <p>레벨: {{ characterLv }}</p>
+    <p>상태: {{ characterStatus }}</p>
+    <p>HP: {{ characterHp }}</p>
+    <p>ATK: {{ characterAtk }}</p>
+    <p>DEF: {{ characterDef }}</p>
+    <p>돈: {{ money }}</p>
+
+
+    <h3>상점</h3>
+    <label>
+        <input type="checkbox" v-model="shopView"
+               v-on:click="shuffleShopList()">상점
+    </label>
+    <button v-on:click="calcBuy()">구매</button>
+    <!-- border 테두리 두께 -->
+    <table border="1">
+        <!-- v-if는 디렉티브이기 때문에 하나의 엘리먼트에 추가해야함. 여러개의 엘리먼트를 전환할 때는
+        보이지 않는 래퍼 역할을 하는 엘리먼트에 v-if를 사용할 수 있고 렌더링 결과는 엘리먼트는 포함되지 않음-->
+        <tr v-if="shopView">
+            <th align="center" width="20">번호</th>
+            <th align="center" width="80">이름</th>
+            <th align="center" width="80">가격</th>
+            <th align="center" width="320">효과</th>
+            <th align="center" width="40">구매</th>
+        </tr>
+        <tr v-if="shopView" v-for="(list, idx) in shopList"
+            v-bind:key="list.itemName">
+            <th align="center" width="20">{{ idx + 1 }}</th>
+            <th align="center" width="80">{{ list.itemName }}</th>
+            <th align="center" width="80">{{ list.price }}</th>
+            <th align="center" width="320">{{ list.effect.desc }}</th>
+            <th align="center" width="40">
+                <label>
+                    <input type="checkbox"
+                           v-model="shopListValue" v-bind:value="idx">
+                </label>
+            </th>
+        </tr>
+    </table>
+
+    <!-- 오늘 작업한 상점 구매 기능을 활용해서 자신의 인벤토리 창을 확인할 수
+         있게 만든다. 또한 무기를 장착하여 공격력이 증가할 수 있게 만들어보자!
+         1. 인벤토리함 열고 닫고
+         2. 구매한 아아템을 인벤토리함으로 이동
+         3. 인벤토리함에 있는 아이템 장착 버튼 누르기
+         4. 적용 시키기 -->
+    <h3>인벤토리 함</h3>
+    <label>
+        <input type="checkbox" v-model="shopInventory"
+               v-on:click="shuffleShopList()">소중한 인벤토리함
+    </label>
+    <button v-on:click="calcBuy()">껴볼래?</button>
+    <table border="1">
+        <tr v-if="shopInventory">
+            <th align="center" width="30">번호</th>
+            <th align="center" width="150">보관중 아이템 이름</th>
+            <th align="center" width="150">효과</th>
+            <th align="center" width="40">착용하기</th>
+        </tr>
+        <tr v-if="shopInventory" v-for="(list, idx) in inventoryList"
+            v-bind:key="list.itemName">
+            <th align="center" width="20">{{ idx + 1 }}</th>
+            <th align="center" width="80">{{ list.itemName }}</th>
+            <th align="center" width="320">{{ list.effect.desc }}</th>
+            <th align="center" width="40">
+                <label>
+                    <input type="checkbox"
+                           v-model="inventoryList" v-bind:value="idx">
+                </label>
+            </th>
+        </tr>
+    </table>
+
+    </br></br>
+
+    <!-- 버튼 추가 -->
+    <button v-on:click="addMonster">몬스터 추가</button></br>
+    <button v-on:click="addManyMonster">100마리씩 몬스터 추가</button>
+    <button v-on:click="amaterasu">아마테라스</button>
+    <!-- 기린 추가 -->
+    <button v-on:click="girin">궁극기! 기이~린!</button>
+
+    <!-- 몬스터id 값을 KEY에 할당. -->
+    <!-- v-bind:class="{ strong: monster.hp > 300 } 는 strong 클래스의
+         존재여부가 데이터속성 monster.hp > 300 초과일때 트루속성이 되는 것을 의미한다. -->
+    <!-- 소스 데이터를 기반으로 요소 또는 템플릿 블록을 여러번 렌더링 합니다. 또는 인덱스의 별칭
+         (또는 객체에서 사용되는 경우)을 지정할 수 있다.
+       예) <div v-for="(item, index) in items"></div>
+           <div v-for="(val, key) in object"></div>
+           <div v-for="(val, name, index) in object"></div>       -->
+    <!-- v-for 를 사용해서 나머지 값들에도 v- 를 붙혀줘서 사용해야하는듯하다   -->
+    <ul>
+        <li v-for="(monster, index) in monsters"
+            v-bind:key="monster.id"
+            v-bind:class="{ strong: monster.hp > 300 }">
+            ID.{{ monster.id }} {{ monster.monsterName }}
+            HP.{{ monster.hp }} STATUS.{{ monster.status }}
+            <!-- doRemove로 해당 인덱스값 지운다 -->
+            <button v-on:click="doRemove(index)">몬스터 삭제</button>
+            <span v-if="monster.hp > 300">강함</span>
+            <span v-if="monster.hp <= monster.morbidity">빈사상태</span>
+            <button v-on:click="doAttack(index)">공격</button>
+        </li>
+    </ul>
+
+
+</div>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            // 몬스터
+            monsters: [
+                { id: 1, monsterName: '슬라임', hp: 10, status: 'Default' },
+                { id: 2, monsterName: '고블린', hp: 30, status: 'Default' },
+                { id: 3, monsterName: '드래곤', hp: 5000, status: 'Default' }
+            ],
+            monBooks: [
+                { monsterName: '슬라임', exp: 1, hp: 10, sprMoney: 10 },
+                { monsterName: '고블린', exp: 2, hp: 20, sprMoney: 20 },
+                { monsterName: '빨간 슬라임', exp: 5, hp: 10, sprMoney: 40 },
+                { monsterName: '구울', exp: 10, hp: 50, sprMoney: 100},
+                { monsterName: '해골 병사', exp: 20, hp: 100, sprMoney: 200 },
+                { monsterName: '해골 궁수', exp: 20, hp: 70, sprMoney: 200 },
+                { monsterName: '해골 기사', exp: 50, hp: 400, sprMoney: 500 },
+                { monsterName: '고스트', exp: 100, hp: 1000, sprMoney: 700 },
+                { monsterName: '듀라한', exp: 200, hp: 4000, sprMoney: 1000 },
+                { monsterName: '리치', exp: 500, hp: 10000, sprMoney: 2000 },
+                { monsterName: '리치킹', exp: 3000, hp: 100000, sprMoney: 10000 },
+                { monsterName: '베히모스', exp: 2000, hp: 80000, sprMoney: 5000 },
+                { monsterName: '베히모스킹', exp: 25000, hp: 800000, sprMoney: 50000 },
+                { monsterName: '드래곤', exp: 100000, hp: 10000000, sprMoney: 100000 },
+            ],
+            itemBooks: [
+                { itemName: 'HP Potion I', price: 50, effect:
+                        { desc: "20 hp recover", amount: 200 } },
+                { itemName: 'HP Potion II', price: 200, effect:
+                        { desc: "100 hp recover", amount: 200 } },
+                { itemName: 'HP Potion III', price: 600, effect:
+                        { desc: "400 hp recover", amount: 200 } },
+                { itemName: 'HP Potion IV', price: 1200, effect:
+                        { desc: "800hp recover", amount: 200 } },
+                { itemName: 'HP Potion V', price: 2000, effect:
+                        { desc: "1200hp recover", amount: 200 } },
+                { itemName: 'Sword', price: 300000, effect:
+                        { desc: "weapon", atk: 100 } },
+                { itemName: 'Iron Sword', price: 1000000, effect:
+                        { desc: "weapon", atk: 200 } }
+            ],
+            characterName: '',
+            characterLv: 1,
+            characterStatus: '',
+            characterHp: 100,
+            characterAtk: 9,
+            characterDef: 1,
+            onlyCalcDef: 1,
+            curExp: 0,
+            needExp: 10,
+            monsterName: '',
+            money: 0,
+            shopList: [],
+            shopListValue: [],
+            shopView: false,
+            myInventory: []
+        },
+        methods: {
+            addMonster: function() {
+                /* reduce 메소드는 배열의 각 요소에 대해 주어진 리듀서(reducer)함수를 실행하고,
+                   하나의 결과값을 반환한다. */
+                var max = this.monsters.reduce(function(a, b) {
+                    return a > b.id ? a : b.id
+                }, 0)
+
+                var lenMax = this.monBooks.length
+                var idx = Math.floor(Math.random() * lenMax)
+
+                this.monsters.push({
+                    id: max + 1,
+                    monsterName: this.monBooks[idx].monsterName,
+                    hp: this.monBooks[idx].hp,
+                    status: 'Default'
+                })
+            },
+            addManyMonster: function() {
+                for(var i = 0; i < 100; i++) {
+                    var max = this.monsters.reduce(function(a, b) {
+                        return a > b.id ? a : b.id
+                    }, 0)
+                    var lenMax = this.monBooks.length
+                    var idx = Math.floor(Math.random() * lenMax)
+                    this.monsters.push({
+                        id: max + 1,
+                        monsterName: this.monBooks[idx].monsterName,
+                        hp: this.monBooks[idx].hp,
+                        status: 'Default'
+                    })
+                }
+            },
+            doRemove: function(index) {
+                this.monsters.splice(index, 1)
+            },
+            doAttack: function(index) {
+                this.monsters[index].hp -= this.characterAtk
+            },
+            amaterasu: function() {
+                var i
+
+                for(i = 0; i < this.monsters.length; i++) {
+                    this.monsters[i].hp =
+                        parseInt(this.monsters[i].hp -
+                            this.characterAtk * 1.5)
+
+                    if(this.monsters[i].hp > 0) {
+                        this.monsters[i].status = 'Stun'
+                    }
+                }
+            },
+            girin: function() {
+                var i
+
+                for(i = 0; i < this.monsters.length; i++) {
+                    this.monsters[i].hp =
+                        parseInt(this.monsters[i].hp -
+                            this.characterAtk * 15000)
+
+                    if(this.monsters[i].hp > 0) {
+                        this.monsters[i].status = 'Stun'
+                    }
+                }
+            },
+            shuffleShopList: function() {
+                if(!this.shopView) {
+                    this.shopListValue = []
+                }
+
+                for(var i = 0; i < 10; i++) {
+                    var randIdx = Math.floor(Math.random() * this.itemBooks.length)
+                    this.shopList[i] = this.itemBooks[randIdx]
+                }
+            },
+            calcBuy: function () {
+                /* 아이템 사는 합계 금액 */
+                var tmpSum = 0
+
+                /* 추가해놓은 shopListValue의 길이값을 출력한다. 몇개를 구매하는지
+                    를 표현하기 위해서 */
+                console.log('calcbuy(): ' + this.shopListValue.length)
+                console.log('shopList len: ' + this.shopList.length)
+
+                for(var i = 0; i < this.shopListValue.length; i++) {
+                    console.log(this.shopListValue[i])
+
+                    for(var j = 0; j < this.shopList.length; j++) {
+                        console.log('inner loop')
+
+                        if(this.shopListValue[i] == j) {
+                            console.log('match!')
+                            tmpSum += this.shopList[j].price
+                            break
+                        }
+                    }
+                }
+
+                if(this.money - tmpSum >= 0) {
+                    this.money -= tmpSum
+
+                    for(var i = 0; i < this.shopListValue.length; i++) {
+                        this.myInventory.push({
+                            itemName: this.shopList[this.shopListValue[i]].itemName,
+                            effect: this.shopList[this.shopListValue[i]].effect
+                        })
+                    }
+                } else {
+                    alert('Give me Money')
+                }
+            }
+        },
+        beforeCreate: function () {
+            console.log("Before Create: " + this.monsters)
+        },
+        created: function () {
+            console.log("Created: " + this.monsters)
+        },
+        beforeMount: function () {
+            console.log("Before Mount: " + this.monsters)
+        },
+        mounted: function () {
+            console.log("Mounted: " + this.monsters)
+        },
+        beforeUpdate: function() {
+            //console.log("Before Update: " + this.monsters)
+
+            var i
+
+            // 입력된 몬스터의 길이값만큼 동작
+            for(i = 0; i < this.monsters.length; i++) {
+                if(this.monsters[i].hp <= 0) {
+                    for(var j = 0; j < this.monBooks.length; j++) {
+                        if(this.monsters[i].monsterName ==
+                            this.monBooks[j].monsterName) {
+                            this.curExp += this.monBooks[j].exp
+                            var tmp = this.monBooks[j].sprMoney
+                            this.money += parseInt(tmp + Math.random() * (tmp / 2))
+                        }
+                    }
+                    this.monsters.splice(i, 1)
+                }
+            }
+
+            // 경험치를 criteria 에 할당
+            var criteria = this.curExp
+
+
+            for(; this.curExp >= this.needExp; ) {
+                this.curExp = parseInt(this.curExp - this.needExp)
+
+                this.characterLv += 1
+                this.characterHp += 10
+                this.characterAtk += 2
+                this.onlyCalcDef += 0.4
+                this.characterDef = Math.floor(this.onlyCalcDef)
+
+                if(this.characterLv < 10) {
+                    this.needExp = parseInt(this.needExp * 1.1)
+                } else if(this.characterLv < 20) {
+                    this.needExp = parseInt(this.needExp * 1.2)
+                } else if(this.characterLv < 30) {
+                    this.needExp = parseInt(this.needExp * 1.3)
+                } else if(this.characterLv < 40) {
+                    this.needExp = parseInt(this.needExp * 1.4)
+                } else if(this.characterLv < 50) {
+                    this.needExp = parseInt(this.needExp * 1.5)
+                } else if(this.characterLv < 90) {
+                    this.needExp = parseInt(this.needExp * 1.7)
+                } else if(this.characterLv < 100) {
+                    this.needExp = parseInt(this.needExp * 2)
+                }
+            }
+        },
+        updated: function () {
+            console.log("Updated: " + this.monsters)
+        },
+        beforeDestroy: function () {
+            console.log("Before Destroy: " + this.monsters)
+        },
+        destroyed: function () {
+            console.log("Destroyed: " + this.monsters)
+        }
+    })
+</script>
+</body>
+</html>

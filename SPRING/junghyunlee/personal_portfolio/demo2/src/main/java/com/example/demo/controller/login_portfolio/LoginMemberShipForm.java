@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 @RequestMapping(value = "/loginMemberShip")
-public class loginMemberShipForm {
+public class LoginMemberShipForm {
     private static final Logger log =
             LoggerFactory.getLogger(JoinMemberController_portfolio.class);
 

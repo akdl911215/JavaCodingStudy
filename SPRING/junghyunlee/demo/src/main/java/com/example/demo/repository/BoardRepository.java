@@ -54,9 +54,6 @@ public class BoardRepository {
     public void create(Board board) throws Exception {
         log.info("create()");
 
-        /* values(?, ?, ?) 은 insert into board(title, content, writer)
-           값을 받는다. */
-
         // alter table board convert to charset utf8;
         // 한글 처리 안 될 경우
         String query = "insert into board(title, content, writer) " +

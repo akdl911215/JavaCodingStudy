@@ -16,4 +16,32 @@ public class VueTestController {
 
         return "vue/main";
     }
+
+    @GetMapping("/vuegame")
+    public String getVueGame() {
+        log.info("getVueGame()");
+
+        return "vue/game";
+    }
+
+    @GetMapping("/vueGameStart")
+    public String getVueGameStart() {
+        log.info("getVueGameStart()");
+
+        return "vue/gameStart";
+    }
+
+    @GetMapping("/vueTestStart")
+    public String getVueTestStart() {
+        log.info("getVueTestStart()");
+
+        return "vue/testStart";
+    }
+
+    @GetMapping("/vueMultiCheckBox")
+    public String getVueMultiCheckBox() {
+        log.info("getVueMultiCheckBox()");
+
+        return "vue/multiCheckBox";
+    }
 }

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <div id="example">
+        <p>원본 메시지: {{ message }}</p>
+        <p>역순으로 표시한 메시지: "{{ reversedMessage }}"</p>
+
+        <p>뒤집힌 메시지: "{{ reversedMessage }}"</p>
+    </div>
+
+    <script>
+        var vm = new Vue({
+            el: '#example',
+            data: {
+                message: '안녕하세요'
+            },
+            computed: {
+                //계산된 getter
+                reversedMessage: function () {
+                    // 'this' 는 vm 인스턴스를 가리킵니다.
+                    return this.message.split('').reverse().join('')
+                }
+            },
+            /* computed 속성 대신 메소드와 같은 함수를 정의할 수도 있습니다. 최종 결과에 대해 두 가지 접근
+            방식은 서로 동일합니다. 차이점은 computed 속성은 종속 대상을 따라 저장(캐싱) 된다는 것입니다.
+            computed 속성은 해당 속성이 종속된 대상이 변경될 때만 함수를 실행합니다. 즉 message가 변경되지
+            않는 한, computed 속성인 reversedMessage를 여러 번 요청해도 계산을 다시 하지 않고 계산되어
+            있던 결과를 즉시 반환합니다. 또한 Date.now() 처럼 아무 곳에도 의존하지 않는 computed 속성의 경우
+            절대로 업데이트 되지 않는다는 뜻입니다. */
+            method: {
+                /* 캐싱이 왜 필요할까요? 계산에 시간이 많이 걸리는 computed 속성인 A를 가지고 있다고 해봅시다.
+                이 속성을 계산하려면 거대한 배열을 반복해서 다루고 많은 계산을 해야합니다. 그런데 A에 의존하는 다른
+                computed 속성값도 있을 수 있습니다. 캐싱을 하지 않으면 A 의 getter함수를 꼭 필요한 것보다 더
+                많이 실행하게 됩니다! 캐싱을 원하지 않을 경우 메소드를 사용하십시오 */
+                reversedMessage: function () {
+                    return this.message.split('').reverse().join('')
+                }
+            }
+        })
+    </script>
+
+</body>
+</html>
